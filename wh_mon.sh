@@ -58,6 +58,7 @@ wait_dbus() {
 
 		if [[ -n $($*) ]]; then
 			dbus_pid=$($* | tr -d '[:space:]')
+			log v "$me $dbus_pid"
 			proc_name=$(ps -p $dbus_pid -o comm=)
 			if [[ $proc_name =~ "dbus" ]]; then
 				log v "dbus-monitor found: $dbus_pid"
@@ -175,9 +176,13 @@ fi
 
 # if dbus-monitor is already running - kill
 if [[ -n $(get_dbus_pid) ]]; then
+	prev_pid=$(get_dbus_pid)
 	log w "$me dbus-monitor process already exists"
 	log i "$me killing dbus-monitor process"
-	run "kill -INT $(get_dbus_pid)"
+
+	run "kill -INT $prev_pid"
+	while kill -0 $(ps -o ppid= $prev_pid) 2> /dev/null; do sleep 1; done
+
 	log i "$me old dbus-monitor process is no longer exist"
 fi
 
