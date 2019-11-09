@@ -85,12 +85,12 @@ fi
 
 # installing
 
-if [ ! -f "${csv_dest}/${csv_file}" ]; then
+if [ ! -f "${csv_path}" ]; then
 	log i "copying $csv_file to $csv_dest"
 	run "mkdir -p $csv_dest"
-	run "touch ${csv_dest}/${csv_file}"
+	run "touch ${csv_path}"
 	log i "change owner for $csv_file"
-	run "chown -R $(get_logged_user):$(get_logged_user) $csv_dest"
+	run "chown -R $(get_logged_user):$(get_logged_user) $csv_path"
 fi
 
 log i "copying $mon_file and $help_file to $mon_dest"
