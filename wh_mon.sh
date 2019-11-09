@@ -43,7 +43,7 @@ write() {
 
 write_header() {
 	if $is_root; then sh -c "echo $header >> $file_path"
-	else run "echo $header >> $file_path"; fi
+	else echo $header >> $file_path; fi
 }
 
 
