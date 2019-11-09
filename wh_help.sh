@@ -4,16 +4,16 @@ declare -g color_log=true
 declare -g simple_log=false
 
 # color constants
-declare -r def='\e[39m'
-declare -r gray='\e[90m'
-# declare -r ligth_gray='\e[37m'
-declare -r red='\e[31m'
-declare -r cyan='\e[96m'
-declare -r magenta='\e[95m'
-declare -r yellow='\e[93m'
-declare -r green='\e[92m'
-declare -r blue='\e[94m'
-declare -r nc='\e[0m'
+readonly def='\e[39m'
+readonly gray='\e[90m'
+# readonly ligth_gray='\e[37m'
+readonly red='\e[31m'
+readonly cyan='\e[96m'
+readonly magenta='\e[95m'
+readonly yellow='\e[93m'
+readonly green='\e[92m'
+readonly blue='\e[94m'
+readonly nc='\e[0m'
 
 # logger
 log() {
