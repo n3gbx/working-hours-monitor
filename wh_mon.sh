@@ -58,7 +58,6 @@ wait_dbus() {
 
 		if [[ -n $($*) ]]; then
 			dbus_pid=$($* | tr -d '[:space:]')
-			log v "$me $dbus_pid"
 			proc_name=$(ps -p $dbus_pid -o comm=)
 			if [[ $proc_name =~ "dbus" ]]; then
 				log v "dbus-monitor found: $dbus_pid"
