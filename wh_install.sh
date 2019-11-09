@@ -4,17 +4,18 @@
 
 start_time=$(date +%s%N)
 
-declare -r mon_dest=/usr/local/bin
-declare -r mon_file="wh_mon.sh"
+readonly mon_dest=/usr/local/bin
+readonly mon_file="wh_mon.sh"
 
-declare -r help_dest=$mon_dest
-declare -r help_file="wh_help.sh"
+readonly help_dest=$mon_dest
+readonly help_file="wh_help.sh"
 
-declare -r csv_dest=/var/log
-declare -r csv_file="wh_table.csv"
+readonly csv_path=${1:-/var/log/wh_table.csv}
+readonly csv_dest=${csv_path%/*}
+readonly csv_file=${csv_path##*/}
 
-declare -r daemon_dest=/etc/systemd/system
-declare -r daemon_file="wh_daemon.service"
+readonly daemon_dest=/etc/systemd/system
+readonly daemon_file="wh_daemon.service"
 
 get_curr_run_time() {
 	end_time=$(date +%s%N)
