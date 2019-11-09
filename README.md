@@ -33,10 +33,11 @@ Based on this it helps to control when the user was at the computer and when not
 -OR-
 
 * Copy ```wh_mon.sh``` and ```wh_help.sh``` script files to ```/usr/local/bin```
-* Make them executable: ```chmod +x /usr/local/bin/wh_*.sh```
+* Make them executable: ```sudo chmod +x /usr/local/bin/wh_*.sh```
 * Copy ```wh_daemon.service``` to ```/etc/systemd/system```
 * Make it executable: ```chmod +x /etc/systemd/system/wh_daemon.service```
 * Create ```wh_table.csv``` file inside ```/var/log``` directory
+* Change the owner: ```sudo chown $USER:$USER /var/log/wh_table.csv```
 
 ## Modes
 
