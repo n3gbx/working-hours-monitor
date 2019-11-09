@@ -36,7 +36,7 @@ version: ${version}
 usage: ${0} [options]
 
 options:
-	-c	specify absolute CSV file path (default is ./log.csv)
+	-f	specify absolute CSV file path (default is /var/log/wh_table.csv)
 	-d	date to read (default is latest), 'YYYY-MM-DD' 
 		To specify period, pass the date in format 'YYYY-MM-DD:YYYY-MM-DD'
 	-p 	pretty formatting of the result, 'true' or 'false' (default is false)
