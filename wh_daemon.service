@@ -1,0 +1,11 @@
+[Unit]
+Description=D-Bus Monitor ScreenSaver listener
+After=dbus.service
+
+[Service]
+Type=simple
+Environment="SIMPLE_LOG=true" "COLOR_LOG=false"
+ExecStart=/bin/bash /usr/local/bin/wh_mon.sh
+
+[Install]
+WantedBy=default.target
