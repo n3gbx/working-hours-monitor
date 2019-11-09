@@ -1,18 +1,18 @@
 #! /bin/bash
 
 # common constants
-declare -r me="$0"
+readonly me="$0"
 
 # text formating constants
-declare -r b="\033[1m"
-declare -r n="\033[0m"
-declare -r r="\033[0;31m"
+readonly b="\033[1m"
+readonly n="\033[0m"
+readonly r="\033[0;31m"
 
 # csv related constants
-declare -r wd_dur=$(( 8 * 3600 ))
-declare -r timestamp=$(date +%T)
-declare -r date_format="+%F"
-declare -r date_regex="\d{4}-\d{2}-\d{2}"
+readonly wd_dur=$(( 8 * 3600 ))
+readonly timestamp=$(date +%T)
+readonly date_format="+%F"
+readonly date_regex="\d{4}-\d{2}-\d{2}"
 
 # csv related default variabled
 csv_headers=("date" "time" "message")
