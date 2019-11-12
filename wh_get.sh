@@ -45,11 +45,6 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
-split() {
-	IFS="$1" read -r -a arr <<< "$2"
-	echo "${arr[@]}"
-}
-
 
 # read script options
 while getopts f:d:p:h FLAG; do
@@ -67,11 +62,11 @@ while getopts f:d:p:h FLAG; do
 		if [ -n "$OPTARG" ]; then
 			
 			# split the dates period
-			period=($(split : "$OPTARG"))
-			size=${#period[@]}
+			IFS=":" read -r -a period <<< "$OPTARG"
+			period_size=${#period[@]}
 
 			# if period was defined, it should consist of 2 dates
-			if [ ${size} -gt 2 ]; then
+			if [ $period_size -gt 2 ]; then
 				echo -e "Invalid date period: '${OPTARG}'"\\n
 				echo "$help"
 				exit 1;
@@ -91,7 +86,7 @@ while getopts f:d:p:h FLAG; do
 			# assign date option to start date variable 
 			from_date=${period[0]}
 
-			if [ $size -eq 2 ] && [ ${period[0]} != ${period[1]} ]; then
+			if [ $period_size -eq 2 ] && [ ${period[0]} != ${period[1]} ]; then
 				# assign the end date
 				to_date=${period[1]}
 
