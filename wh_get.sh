@@ -124,6 +124,7 @@ while getopts f:d:p:vh FLAG; do
 				dates+=("$from_date")
 			fi
 
+			# DEBUG
 			# echo "dates: ${dates[@]}"
 			# echo "period: ${period[@]}"
 			# echo "from $from_date to $to_date"
@@ -153,8 +154,8 @@ else
 fi
 
 
-# if -d option is not set, print set dates
-if [  -z ${period+x} ] || [ ${#period[@]} -eq 0 ]; then
+# if -d option is not set, print all dates
+if [ -z ${period+x} ] || [ ${#period[@]} -eq 0 ]; then
 	dates=($(awk -F"," 'NR>1{print $1}' $from_csv | uniq))
 fi
 
@@ -163,10 +164,10 @@ for d in "${dates[@]}"; do
 
 	# count of records for a specific date
 	count=$(grep -r "$d" $from_csv | wc -l)
-
+	
 	# check whether there are at least 2 records with that date in csv
 	# 2 means unlocked|started and lock|finished records
-	if [[ $count -lt 2 ]]; then continue; fi
+	if [[ $count -lt 2 && "$(date +%F)" != "$d" ]]; then continue; fi
 
 	# add the date to the new filtered array
 	filtered+=("$d")
@@ -189,6 +190,9 @@ for d in "${dates[@]}"; do
 
 				# remember 'unlocked' time
 				unlock_time=$(date -u -d "$time" +"%s")
+
+				# remember the start of the day if it was not set yet
+    			if [ -z $wd_start ]; then wd_start=$unlock_time; fi
 
 				# if it's the last record for that date
 				# but not the 'locked' record
@@ -216,7 +220,6 @@ for d in "${dates[@]}"; do
 
     					# calculate break time
     					wd_break=$(( lock_time - wd_start - wd_spent ))
-
     				else
     					# the time logging has been broken
     					# or the next day was started
@@ -227,9 +230,6 @@ for d in "${dates[@]}"; do
 					fi
     			fi
     		elif [[ $status =~ (locked|finished) ]]; then
-
-    			# remember the start of the day if it was not set yet
-    			if [ -z $wd_start ]; then wd_start=$unlock_time; fi
 
     			# remember the 'locked' time
      			lock_time=$(date -u -d "$time" +"%s")
@@ -274,6 +274,7 @@ for d in "${dates[@]}"; do
 		$(date -u -d "0 $wd_over sec" +"%-Hh%-Mm%-Ss") \
 		$(date -u -d "0 $wd_total sec" +"%-Hh%-Mm%-Ss")"
 	)
+	
 	unset wd_start wd_spent wd_end wd_break wd_over wd_total
 done
 
@@ -292,7 +293,6 @@ if [[ ${#results[@]} -ne 0 ]]; then
 					longest_rec=$rec
 				fi
 			done
-			# col_names_to_width["$header"]=$longest_len
 
 			# 2 means default column offset
 			pretty_format+="%-$(( longest_len + 2 ))s "
