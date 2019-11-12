@@ -18,7 +18,6 @@ csv_headers=("date" "time" "message")
 table_headers=("date" "start" "spent" "end" "break" "overtime" "total")
 
 # common default veriables
-version="0.1a"
 from_csv="/var/log/wh_table.csv"
 
 # default pretty formatting variables
@@ -27,11 +26,8 @@ max_table_width=$(tput cols)
 max_table_col_width=$(( max_table_width / ${#table_headers[@]} ))
 declare -A col_names_to_width=()
 
-
 # write multiline help message into the variable
 read -d '' help << EOF
-version: ${version}
-
 usage: ${0} [options]
 
 options:
@@ -40,7 +36,6 @@ options:
 		To specify period, pass the date in format 'YYYY-MM-DD:YYYY-MM-DD'
 	-p 	pretty formatting of the result, 'true' or 'false' (default is false)
 	-h	display script helper
-	-v	display script version
 EOF
 
 # check whether the arguments are passed
@@ -57,7 +52,7 @@ split() {
 
 
 # read script options
-while getopts f:d:p:vh FLAG; do
+while getopts f:d:p:h FLAG; do
 	case $FLAG in
 	f)	
 		# check whether the file path has even passed
@@ -131,7 +126,6 @@ while getopts f:d:p:vh FLAG; do
 			# echo "from $from_date to $to_date"
 		fi
 	;;
-    v)	echo "$version"; exit 0 ;;
     h)	echo "$help"; exit 0 ;;
     \?)
      	echo -e "Option not allowed"\\n
