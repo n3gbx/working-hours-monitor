@@ -11,8 +11,7 @@ readonly r="\033[0;31m"
 # csv related constants
 readonly wd_dur=$(( 8 * 3600 ))
 readonly timestamp=$(date +%T)
-readonly date_format="+%F"
-readonly date_regex="\d{4}-\d{2}-\d{2}"
+readonly date_regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 
 # csv related default variabled
 csv_headers=("date" "time" "message")
@@ -85,9 +84,9 @@ while getopts f:d:p:vh FLAG; do
 
 			# validate date(s) format
 			for d in "${period[@]}"; do
-				date "$date_format" -d "$d" > /dev/null  2>&1
+				date "+%F" -d "$d" >/dev/null 2>&1
 				ec=$?
-				if [ $ec -ne 0 ]; then
+				if ! [[ "$d" =~ $date_regex && $ec -eq 0 ]]; then
 					echo -e "Invalid date: $OPTARG"\\n
 					echo "$help"
 					exit 1;
