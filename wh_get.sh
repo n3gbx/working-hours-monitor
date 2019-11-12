@@ -151,13 +151,13 @@ else
 	# set complete list of available dates within the given csv file
 	# do not skip header while counting 
 	csv_size=$(cat -n $from_csv | awk 'END { print NR }')
-	csv_dates=($(awk 'BEGIN {FS = ","} FNR > 1 { print $1 }' $from_csv))
+	csv_dates=($(awk 'BEGIN {FS = ","} FNR > 1 { print $1 }' $from_csv | uniq))
 fi
 
 
 # if -d option is not set, print all dates
 if [ -z ${period+x} ] || [ ${#period[@]} -eq 0 ]; then
-	dates=($(awk -F"," 'NR>1{print $1}' $from_csv | uniq))
+	dates=(${csv_dates[@]})
 fi
 
 
