@@ -46,7 +46,7 @@ EOF
 
 # check whether the arguments are passed
 if [ $# -eq 0 ]; then
-	echo -e "No arguments passed!\\n"
+	echo -e "No arguments passed!"\\n
 	echo "${help}"
 	exit 1
 fi
@@ -56,13 +56,14 @@ split() {
 	echo "${arr[@]}"
 }
 
+
 # read script options
 while getopts f:d:p:vh FLAG; do
 	case $FLAG in
 	f)	
 		# check whether the file path has even passed
 		if [ -n "$OPTARG" ]; then from_csv=$OPTARG
-		else echo -e "File path is empty \n"; echo "$help"; exit 1; fi
+		else echo -e "File path is empty"\\n; echo "$help"; exit 1; fi
 	;;
 	p)	
 		if [[ $OPTARG =~ (false|true) ]]; then is_pretty=$OPTARG; fi
@@ -77,7 +78,7 @@ while getopts f:d:p:vh FLAG; do
 
 			# if period was defined, it should consist of 2 dates
 			if [ ${size} -gt 2 ]; then
-				echo -e "Invalid date period: '${OPTARG}'\n"
+				echo -e "Invalid date period: '${OPTARG}'"\\n
 				echo "$help"
 				exit 1;
 			fi
@@ -87,7 +88,7 @@ while getopts f:d:p:vh FLAG; do
 				date "$date_format" -d "$d" > /dev/null  2>&1
 				ec=$?
 				if [ $ec -ne 0 ]; then
-					echo -e "Invalid date: $OPTARG \n"
+					echo -e "Invalid date: $OPTARG"\\n
 					echo "$help"
 					exit 1;
 				fi
@@ -115,6 +116,7 @@ while getopts f:d:p:vh FLAG; do
 				d="$from_date"
 				until [[ $d > $to_date ]]; do
 					dates+=("$d")
+					echo -ne "adding dates: ${#dates[@]}"\\r
 					d=$(date -I -d "$d + 1 day")
 				done
 			else
@@ -133,7 +135,7 @@ while getopts f:d:p:vh FLAG; do
     v)	echo "$version"; exit 0 ;;
     h)	echo "$help"; exit 0 ;;
     \?)
-     	echo -e "Option not allowed\n"
+     	echo -e "Option not allowed"\\n
      	echo "$help"
      	exit 1
     ;;
@@ -161,6 +163,7 @@ fi
 
 
 for d in "${dates[@]}"; do
+	echo -ne "dates processed: ${#filtered[@]}"\\r
 
 	# count of records for a specific date
 	count=$(grep -r "$d" $from_csv | wc -l)
