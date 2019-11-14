@@ -13,6 +13,7 @@ readonly wd_dur=$(( 8 * 3600 ))
 readonly timestamp=$(date +%T)
 readonly daystamp=$(date +%F)
 readonly date_regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+readonly time_regex="^[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$"
 
 # csv related default variabled
 csv_headers=("date" "time" "message")
@@ -210,6 +211,10 @@ for d in "${dates[@]}"; do
 	while IFS="," read -r day time status; do
 		# increment the line number
 		(( line++ ))
+
+		# skip the line if the 'time' field is invalid 
+		date "+%H:%M:%S" -d "$time" >/dev/null 2>&1
+		if ! [[ $? -eq 0 && $time =~ $time_regex ]]; then continue; fi
 
 		# the first status should be of 'unlocked'or 'started'
 		if [[ $status != $prev_status ]]; then
