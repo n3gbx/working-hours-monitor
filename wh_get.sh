@@ -43,14 +43,6 @@ options:
 	-h	display script helper
 EOF
 
-# check whether the arguments are passed
-if [ $# -eq 0 ]; then
-	echo -e "No arguments passed!"\\n
-	echo "${help}"
-	exit 1
-fi
-
-
 get_week_dates() {
 	local week_dates=()
 
