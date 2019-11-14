@@ -15,12 +15,14 @@ readonly daystamp=$(date +%F)
 readonly date_regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 readonly time_regex="^[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$"
 
-# csv related default variabled
+# csv related default variables
 csv_headers=("date" "time" "message")
 table_headers=("date" "start" "spent" "end" "break" "overtime" "total")
+from_csv="/var/log/wh_table.csv"
 
 # common default veriables
-from_csv="/var/log/wh_table.csv"
+has_summary=false
+wd_spent_summ=0
 
 # default pretty formatting variables
 is_pretty=false
@@ -37,6 +39,7 @@ options:
 	-d	date to read (all, by default)
 		Accepted: 'YYYY-MM-DD', 'YYYY-MM-DD:YYYY-MM-DD', today, week, month
 	-p 	pretty formatting of the result, 'true' or 'false' (default is false)
+	-s  prints 'spent' column summary for given date(s)
 	-h	display script helper
 EOF
 
@@ -86,7 +89,7 @@ get_month_dates() {
 
 
 # read script options
-while getopts f:d:p:h FLAG; do
+while getopts f:d:p:s:h FLAG; do
 	case $FLAG in
 		f)	
 			# check whether the file path has even passed
@@ -95,6 +98,9 @@ while getopts f:d:p:h FLAG; do
 			;;
 		p)	
 			if [[ $OPTARG =~ (false|true) ]]; then is_pretty=$OPTARG; fi
+			;;
+		s)
+			if [[ $OPTARG =~ (false|true) ]]; then has_summary=$OPTARG; fi
 			;;
 		d)
 			case $OPTARG in
@@ -216,7 +222,7 @@ for d in "${dates[@]}"; do
 		date "+%H:%M:%S" -d "$time" >/dev/null 2>&1
 		if ! [[ $? -eq 0 && $time =~ $time_regex ]]; then continue; fi
 
-		# the first status should be of 'unlocked'or 'started'
+		# the first status should be of 'unlocked' or 'started'
 		if [[ $status != $prev_status ]]; then
 			if [[ $status =~ (unlocked|started) ]]; then
 
@@ -227,7 +233,6 @@ for d in "${dates[@]}"; do
     			if [ -z $wd_start ]; then wd_start=$unlock_time; fi
 
 				# if it's the last record for that date
-				# but not the 'locked' record
 				if [ $line -eq $count ]; then
 
 					# if it's the last record of the file
@@ -306,6 +311,8 @@ for d in "${dates[@]}"; do
 		$(date -u -d "0 $wd_over sec" +"%-Hh%-Mm%-Ss") \
 		$(date -u -d "0 $wd_total sec" +"%-Hh%-Mm%-Ss")"
 	)
+
+	if $has_summary; then wd_spent_summ=$(( wd_spent_summ + wd_spent )); fi
 	
 	unset wd_start wd_spent wd_end wd_break wd_over wd_total
 done
@@ -343,5 +350,10 @@ if [[ ${#results[@]} -ne 0 ]]; then
 			recs=($row)
 			echo "${recs[@]}"
 		done
+	fi
+
+	# show summary if option set
+	if [ $wd_spent_summ -gt 0 ] && $has_summary; then
+		echo "total spent: ~$(( wd_spent_summ / 3600 ))h"
 	fi
 fi
