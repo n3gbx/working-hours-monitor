@@ -3,10 +3,6 @@
 # common constants
 readonly me="$0"
 
-# text formating constants
-readonly b="\033[1m"
-readonly n="\033[0m"
-readonly r="\033[0;31m"
 
 # csv related constants
 readonly wd_dur=$(( 8 * 3600 ))
