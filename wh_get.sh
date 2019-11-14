@@ -11,6 +11,7 @@ readonly r="\033[0;31m"
 # csv related constants
 readonly wd_dur=$(( 8 * 3600 ))
 readonly timestamp=$(date +%T)
+readonly daystamp=$(date +%F)
 readonly date_regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 
 # csv related default variabled
@@ -32,8 +33,8 @@ usage: ${0} [options]
 
 options:
 	-f	specify absolute CSV file path (default is /var/log/wh_table.csv)
-	-d	date to read (default is latest), 'YYYY-MM-DD' 
-		To specify period, pass the date in format 'YYYY-MM-DD:YYYY-MM-DD'
+	-d	date to read (all, by default)
+		Accepted: 'YYYY-MM-DD', 'YYYY-MM-DD:YYYY-MM-DD', today, week, month
 	-p 	pretty formatting of the result, 'true' or 'false' (default is false)
 	-h	display script helper
 EOF
@@ -46,91 +47,125 @@ if [ $# -eq 0 ]; then
 fi
 
 
+get_week_dates() {
+	local week_dates=()
+
+	if [ "$(date +%u)" -ne "1" ]; then
+		# it's not Monday
+		# get Monday date
+		d=$(date -dlast-monday +%F)
+
+		# fill the week dates from Monday to current day
+		until [[ $d > $daystamp ]]; do
+			week_dates+=("$d")
+			d=$(date -I -d "$d + 1 day")
+		done
+	else
+		# it's Monday
+		week_dates+=("$daystamp")
+	fi
+
+	echo "${week_dates[@]}"
+}
+
+get_month_dates() {
+	local month_dates=()
+	
+	# get first day of the month
+	d="${daystamp%-*}-01"
+
+	# fill the week dates from Monday to current day
+	until [[ $d > $daystamp ]]; do
+		month_dates+=("$d")
+		d=$(date -I -d "$d + 1 day")
+	done
+
+	echo "${month_dates[@]}"
+}
+
+
 # read script options
 while getopts f:d:p:h FLAG; do
 	case $FLAG in
-	f)	
-		# check whether the file path has even passed
-		if [ -n "$OPTARG" ]; then from_csv=$OPTARG
-		else echo -e "File path is empty"\\n; echo "$help"; exit 1; fi
-	;;
-	p)	
-		if [[ $OPTARG =~ (false|true) ]]; then is_pretty=$OPTARG; fi
-	;;
-	d)
-		# check whether the date has even passed
-		if [ -n "$OPTARG" ]; then
-			
-			# split the dates period
-			IFS=":" read -r -a period <<< "$OPTARG"
-			period_size=${#period[@]}
+		f)	
+			# check whether the file path has even passed
+			if [ -n "$OPTARG" ]; then from_csv=$OPTARG
+			else echo -e "File path is empty"\\n; echo "$help"; exit 1; fi
+			;;
+		p)	
+			if [[ $OPTARG =~ (false|true) ]]; then is_pretty=$OPTARG; fi
+			;;
+		d)
+			case $OPTARG in
+				"today") dates=("$daystamp") ;;	
+				"week") dates=($(get_week_dates)) ;;
+				"month") dates=($(get_month_dates)) ;;
+				*)
+					# split the dates range
+					IFS=":" read -r -a range <<< "$OPTARG"
+					size=${#range[@]}
 
-			# if period was defined, it should consist of 2 dates
-			if [ $period_size -gt 2 ]; then
-				echo -e "Invalid date period: '${OPTARG}'"\\n
-				echo "$help"
-				exit 1;
-			fi
+					# if range was defined, it should consist of 2 dates
+					if [ $size -gt 2 ]; then
+						echo -e "Invalid date range: '${OPTARG}'"\\n
+						echo "$help"
+						exit 1;
+					fi
 
-			# validate date(s) format
-			for d in "${period[@]}"; do
-				date "+%F" -d "$d" >/dev/null 2>&1
-				ec=$?
-				if ! [[ "$d" =~ $date_regex && $ec -eq 0 ]]; then
-					echo -e "Invalid date: $OPTARG"\\n
-					echo "$help"
-					exit 1;
-				fi
-			done
+					# validate date(s) format
+					for d in "${range[@]}"; do
+						date "+%F" -d "$d" >/dev/null 2>&1
+						ec=$?
+						if ! [[ "$d" =~ $date_regex && $ec -eq 0 ]]; then
+							echo -e "Invalid date: $OPTARG"\\n
+							echo "$help"
+							exit 1;
+						fi
+					done
 
-			# assign date option to start date variable 
-			from_date=${period[0]}
+					# assign date option to start date variable 
+					from_date=${range[0]}
 
-			if [ $period_size -eq 2 ] && [ ${period[0]} != ${period[1]} ]; then
-				# assign the end date
-				to_date=${period[1]}
+					if [ $size -eq 2 ] && [ ${range[0]} != ${range[1]} ]; then
+						# assign the end date
+						to_date=${range[1]}
 
-				# get epoch time to check date period
-				from_epoch=$(date -d "$from_date" +%s)
-				to_epoch=$(date -d "$to_date" +%s)
+						# get epoch time to check date range
+						from_epoch=$(date -d "$from_date" +%s)
+						to_epoch=$(date -d "$to_date" +%s)
 
-				if (( from_epoch > to_epoch )); then
-					echo "The start date ${from_date} is greater" \
-					"than the end date ${to_date}"
-					exit 1;
-				fi
+						if (( from_epoch > to_epoch )); then
+							echo "The start date ${from_date} is greater" \
+							"than the end date ${to_date}"
+							exit 1;
+						fi
 
-				# fill the dates list, which consist
-				# of the dates within the given period
-				d="$from_date"
-				until [[ $d > $to_date ]]; do
-					dates+=("$d")
-					echo -ne "adding dates: ${#dates[@]}"\\r
-					d=$(date -I -d "$d + 1 day")
-				done
-			else
-				# assign start date to end date
-				to_date="$from_date"
-				# add only start date to dates list
-				dates+=("$from_date")
-			fi
-
-			# DEBUG
-			# echo "dates: ${dates[@]}"
-			# echo "period: ${period[@]}"
-			# echo "from $from_date to $to_date"
-		fi
-	;;
-    h)	echo "$help"; exit 0 ;;
-    \?)
-     	echo -e "Option not allowed"\\n
-     	echo "$help"
-     	exit 1
-    ;;
-  esac
+						# fill the dates list, which consist
+						# of the dates within the given range
+						d="$from_date"
+						until [[ $d > $to_date ]]; do
+							dates+=("$d")
+							echo -ne "adding dates: ${#dates[@]}"\\r
+							d=$(date -I -d "$d + 1 day")
+						done
+					else
+						# assign start date to end date
+						to_date="$from_date"
+						# add only start date to dates list
+						dates+=("$from_date")
+					fi
+					;;
+			esac
+			;;
+    	h)	echo "$help"; exit 0 ;;
+    	\?)
+     		echo -e "Option not allowed"\\n
+     		echo "$help"
+     		exit 1
+    		;;
+  	esac
 done
 shift $(( OPTIND - 1 ))
-
 
 # check whether the file is present
 if [ ! -f $from_csv ]; then
@@ -144,8 +179,8 @@ else
 fi
 
 
-# if -d option is not set, print all dates
-if [ -z ${period+x} ] || [ ${#period[@]} -eq 0 ]; then
+# if -d option is not set, set all dates
+if [[ ${#dates[@]} -eq 0 ]]; then
 	dates=(${csv_dates[@]})
 fi
 
@@ -156,9 +191,10 @@ for d in "${dates[@]}"; do
 	# count of records for a specific date
 	count=$(grep -r "$d" $from_csv | wc -l)
 	
-	# check whether there are at least 2 records with that date in csv
-	# 2 means unlocked|started and lock|finished records
-	if [[ $count -lt 2 && "$(date +%F)" != "$d" ]]; then continue; fi
+	# skip the day if there are less then 2 records within the csv file
+	if [ "$count" -lt 2 ] || [ "$count" -eq 0 -a "$daystamp" = "$day" ]; then
+		continue
+	fi
 
 	# add the date to the new filtered array
 	filtered+=("$d")
@@ -192,7 +228,7 @@ for d in "${dates[@]}"; do
 					# if it's the last record of the file
 					# and if the date is today
 					if [ $to_line -eq $csv_size ] &&
-						[ "$(date +%F)" == "$day" ]; then
+						[ "$daystamp" == "$day" ]; then
 
 						# the working day has not ended yet
     					# remember 'locked' time as timestamp
