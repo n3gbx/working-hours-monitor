@@ -3,7 +3,6 @@
 # common constants
 readonly me="$0"
 
-
 # csv related constants
 readonly wd_dur=$(( 8 * 3600 ))
 readonly timestamp=$(date +%T)
@@ -35,7 +34,7 @@ options:
 	-d	date to read (all, by default)
 		Accepted: 'YYYY-MM-DD', 'YYYY-MM-DD:YYYY-MM-DD', today, week, month
 	-p 	pretty formatting of the result, 'true' or 'false' (default is false)
-	-s  prints 'spent' column summary for given date(s)
+	-s 	prints 'spent' column summary for given date(s)
 	-h	display script helper
 EOF
 
@@ -101,7 +100,7 @@ while getopts f:d:p:s:h FLAG; do
 					size=${#range[@]}
 
 					# if range was defined, it should consist of 2 dates
-					if [ $size -gt 2 ]; then
+					if [  $size -eq 0 ] || [ $size -gt 2 ]; then
 						echo -e "Invalid date range: '${OPTARG}'"\\n
 						echo "$help"
 						exit 1;
