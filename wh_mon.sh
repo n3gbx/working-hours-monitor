@@ -114,16 +114,17 @@ fi
 # verify folder for .csv file
 if [ -d $file_dest ]; then
 
-	dir_owner=$(ls -ld $file_dest | awk '{print $3}')
-
-	# if folder owner is root
-	if ! $is_root && [ "$dir_owner" != "$user" ]; then
-		log e "$me $file_dest has '$dir_owner' user as owner, current is '$user'"
-		exit 1
-	fi
-
 	# verify .csv file
 	if [ -f $file_path ]; then
+
+		owner=$(ls -ld $file_path | awk '{print $3}')
+
+		# if folder owner is root
+		if ! $is_root && [ "$owner" != "$user" ]; then
+			log e "$me $file_path has '$owner' user as owner, current is '$user'"
+			exit 1
+		fi
+		
 		file_header=$(head -n 1 "$file_path")
 
 		if [[ "$file_header" != "$header" ]]; then
