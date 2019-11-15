@@ -186,7 +186,8 @@ for d in "${dates[@]}"; do
 	count=$(grep -r "$d" $from_csv | wc -l)
 	
 	# skip the day if there are less then 2 records within the csv file
-	if [ "$count" -lt 2 ] || [ "$count" -eq 0 -a "$daystamp" = "$day" ]; then
+	if [ "$count" -lt 2 -a "$d" != "$daystamp" ] \
+		|| [ "$count" -eq 0 -a "$d" = "$daystamp" ]; then
 		continue
 	fi
 
@@ -194,7 +195,6 @@ for d in "${dates[@]}"; do
 	filtered+=("$d")
 
 	# get the last date line number to read
-	# from_line=$(awk "/${from_date}/{ print NR; exit }" "$from_csv")
 	to_line=$(awk "/${d}/{ a = NR } END { print a }" "$from_csv")
 		
 	# define entry variables before looping over the date records
