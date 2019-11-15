@@ -352,7 +352,7 @@ if [[ ${#results[@]} -ne 0 ]]; then
 	fi
 
 	# show summary if option set
-	if [ $wd_spent_summ -gt 0 ] && $has_summary; then
+	if [[ $wd_spent_summ -gt 0 ]] && $has_summary; then
 		echo "total spent: ~$(( wd_spent_summ / 3600 ))h"
 	fi
 fi
