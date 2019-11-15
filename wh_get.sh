@@ -187,8 +187,8 @@ for d in "${dates[@]}"; do
 	count=$(grep -r "$d" $from_csv | wc -l)
 	
 	# skip the day if there are less then 2 records within the csv file
-	if [ "$count" -lt 2 -a "$d" != "$daystamp" ] \
-		|| [ "$count" -eq 0 -a "$d" = "$daystamp" ]; then continue; fi
+	if [ "$count" -lt 2 -a "$d" != "$daystamp" ] || \
+		[ "$count" -eq 0 -a "$d" = "$daystamp" ]; then continue; fi
 
 	# add the date to the new filtered array
 	filtered+=("$d")
@@ -226,7 +226,7 @@ for d in "${dates[@]}"; do
 
 					# if it's the last record of the file
 					# and if the date is today
-					if [ $to_line -eq $csv_size ] &&
+					if [ $to_line -eq $csv_size ] && \
 						[ "$daystamp" == "$day" ]; then
 
 						# the working day has not ended yet
