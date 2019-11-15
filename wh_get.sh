@@ -217,7 +217,7 @@ for d in "${dates[@]}"; do
 				unlock_time=$(date -u -d "$time" +"%s")
 
 				# remember the start of the day if it was not set yet
-    			if [ -z $wd_start ]; then wd_start=$unlock_time; fi
+    			if [[ -z $wd_start ]]; then wd_start=$unlock_time; fi
 
 				# if it's the last record for that date
 				if [ $line -eq $count ]; then
@@ -289,19 +289,37 @@ for d in "${dates[@]}"; do
 	done <<< $(awk -vdate="$d"\
 		'BEGIN { FS = "," } $1 == date { print $0 }' $from_csv)
 
-	# set calculated time to result array
-	results+=("${d} \
-		$(date -u -d "0 $wd_start sec" +"%H:%M") \
-		$(date -u -d "0 $wd_spent sec" +"%-Hh%-Mm%-Ss") \
-		$(date -u -d "0 $wd_end sec" +"%H:%M") \
-		$(date -u -d "0 $wd_break sec" +"%-Hh%-Mm%-Ss") \
-		$(date -u -d "0 $wd_over sec" +"%-Hh%-Mm%-Ss") \
-		$(date -u -d "0 $wd_total sec" +"%-Hh%-Mm%-Ss")"
-	)
+	if [[ -n $wd_start ]]; then
+		# calculate break
+		wd_break=${wd_break:-$(( wd_end - wd_start - wd_spent ))}
 
-	if $has_summary; then wd_spent_summ=$(( wd_spent_summ + wd_spent )); fi
-	
-	unset wd_start wd_spent wd_end wd_break wd_over wd_total
+		# default overtime
+		wd_over="0"
+		# calculate overtime if spent time
+		# greater then working day durration
+		if [[ $wd_spent -gt $wd_dur ]]; then
+			wd_over=$(( wd_spent - wd_dur ))
+		fi
+
+		# calculate total time
+		wd_total=$(( wd_spent + wd_break ))
+
+		# set calculated time to result array
+		results+=("$d \
+			$(date -u -d "0 $wd_start sec" +"%H:%M") \
+			$(date -u -d "0 $wd_spent sec" +"%-Hh%-Mm%-Ss") \
+			$(date -u -d "0 $wd_end sec" +"%H:%M") \
+			$(date -u -d "0 $wd_break sec" +"%-Hh%-Mm%-Ss") \
+			$(date -u -d "0 $wd_over sec" +"%-Hh%-Mm%-Ss") \
+			$(date -u -d "0 $wd_total sec" +"%-Hh%-Mm%-Ss")"
+		)
+
+		if $has_summary; then
+			wd_spent_summ=$(( wd_spent_summ + wd_spent ))
+		fi
+
+		unset wd_start wd_spent wd_end wd_break wd_over wd_total
+	fi
 done
 
 
