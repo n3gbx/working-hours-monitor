@@ -266,23 +266,6 @@ for d in "${dates[@]}"; do
     	else continue;
 		fi
 
-		# calculate the break, total and over time
-		if [ $line -eq $count ]; then
-			# calculate break
-			wd_break=${wd_break:-$(( wd_end - wd_start - wd_spent ))}
-
-			# default overtime
-			wd_over="0"
-			# calculate overtime if spent time
-			# greater then working day durration
-			if [[ $wd_spent -gt $wd_dur ]]; then
-				wd_over=$(( wd_spent - wd_dur ))
-			fi
-
-			# calculate total time
-			wd_total=$(( wd_spent + wd_break ))
-		fi
-
 		# remember the previous status of the record
 		prev_status="$status"
 
