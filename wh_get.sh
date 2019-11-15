@@ -16,6 +16,7 @@ table_headers=("date" "start" "spent" "end" "break" "overtime" "total")
 from_csv="/var/log/wh_table.csv"
 
 # common default veriables
+is_broken=false
 has_summary=false
 wd_spent_summ=0
 
@@ -187,9 +188,7 @@ for d in "${dates[@]}"; do
 	
 	# skip the day if there are less then 2 records within the csv file
 	if [ "$count" -lt 2 -a "$d" != "$daystamp" ] \
-		|| [ "$count" -eq 0 -a "$d" = "$daystamp" ]; then
-		continue
-	fi
+		|| [ "$count" -eq 0 -a "$d" = "$daystamp" ]; then continue; fi
 
 	# add the date to the new filtered array
 	filtered+=("$d")
@@ -207,7 +206,10 @@ for d in "${dates[@]}"; do
 
 		# skip the line if the 'time' field is invalid 
 		date "+%H:%M:%S" -d "$time" >/dev/null 2>&1
-		if ! [[ $? -eq 0 && $time =~ $time_regex ]]; then continue; fi
+		if ! [[ $? -eq 0 && $time =~ $time_regex ]]; then
+			is_broken=true
+			continue
+		fi
 
 		# the first status should be of 'unlocked' or 'started'
 		if [[ $status != $prev_status ]]; then
@@ -250,6 +252,7 @@ for d in "${dates[@]}"; do
     					# then reset to the last 'locked' status
     					# because of the inability to accurately track
     					# the end of the working day
+    					is_broken=true
     					unset unlock_time
 					fi
     			fi
@@ -261,9 +264,13 @@ for d in "${dates[@]}"; do
      			# calculate spent time till current moment
     			wd_spent=$(( wd_spent + (lock_time - unlock_time) ))
     			wd_end=$lock_time
-    		else continue;
+    		else 
+    			is_broken=true
+    			continue # skip the line if the 'status' field is invalid
     		fi
-    	else continue;
+    	else 
+    		is_broken=true
+    		continue # skip the line if the 'status' field repeats
 		fi
 
 		# remember the previous status of the record
@@ -287,8 +294,12 @@ for d in "${dates[@]}"; do
 		# calculate total time
 		wd_total=$(( wd_spent + wd_break ))
 
+		wd_date=$d
+		# add '!' next to the date if there were any errors within calculating
+		if $is_broken; then wd_date+="!"; is_broken=false; fi
+
 		# set calculated time to result array
-		results+=("$d \
+		results+=("$wd_date \
 			$(date -u -d "0 $wd_start sec" +"%H:%M") \
 			$(date -u -d "0 $wd_spent sec" +"%-Hh%-Mm%-Ss") \
 			$(date -u -d "0 $wd_end sec" +"%H:%M") \
