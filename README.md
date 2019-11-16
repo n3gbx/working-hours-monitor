@@ -77,7 +77,9 @@ $ sudo bash wh_mon.sh
 
 To change .csv file path, please pass it as a first script argument:
 
-```$ bash wh_mon.sh [path]```
+```
+$ bash wh_mon.sh [path]
+```
 
 **Daemon**
 
