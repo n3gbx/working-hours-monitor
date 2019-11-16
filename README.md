@@ -143,4 +143,4 @@ date         start   spent      end     break     overtime total
 2019-11-09   20:23   0h14m19s   04:23   0h0m10s   0h0m0s   0h14m29s 
 ```
 
-For more information about ```wh_get.sh``` options, please read help ```$ bash wh_get.sh -h```
+For more information about ```wh_get.sh``` options, please read help adding ```-h``` option
