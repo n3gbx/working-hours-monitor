@@ -2,29 +2,29 @@
 
 The project consists of a set of scripts that are interrelated to perform common tasks for monitoring, parsing, logging and retrieving information about the status of the user's desktop - locked or not. Bases on the logged information, user can track and analyze the time spent at the computer.
 
-## Features
+## Features :dizzy:
 
-* **Easy to install** :hourglass:
+* **Easy to install**
 
   With the script which will do whole setup, only a couple of commands separate the user from the beginning of using the program after installation.
   
-* **One script - one task** :dizzy:
+* **One script - one task** 
 
   The project has two main ideas - monitoring and data aggregation. Specialy for those tasks there are two head scripts - ```wh_mon.sh``` and ```wh_get.sh``` respectively.
   
-* **Use modes** :wrench:
+* **Use modes**
 
   The user has the option to choose how to use the script for monitoring: in foreground or like a systemctl daemon.
   
-* **Human readable logs** :alien:
+* **Human readable logs**
 
   Much attention was paid to logging information, for ease to understand what happens during the ```wh_mon.sh``` running.
   
-* **Aggregation flexibility** :date:
+* **Aggregation flexibility**
 
   Ease and flexibility in data aggregation is provided by the diverse options and their variations, which allows the user to collect data for any period of time.
 
-## Getting Started
+## Getting Started :electric_plug:
 
 These instructions will help you to understand how to deploy a project to your workstation for testing, development, or usage purposes.
 
@@ -61,23 +61,46 @@ OR
 
 ### Usage
 
-1. **Foreground** :hear_no_evil:
+**Foreground**
 
-```wh_mon.sh``` can be launched from the Terminal tab as a standart bash process, so it will work in foreground:
+To run ```wh_mon.sh``` from the Terminal tab as a standart bash process:
 
-```$ bash wh_mon.sh```
+``` 
+$ bash wh_mon.sh 
+```
+
+If your .csv file has the onwer differ from the current user:
+
+``` 
+$ sudo bash wh_mon.sh 
+```
 
 To change .csv file path, please pass it as a first script argument:
 
-```$ bash wh_mon.sh <CSV_ABSOLUTE_PATH>```
+```$ bash wh_mon.sh [path]```
 
-2. **Daemon** :see_no_evil:
+**Daemon**
 
-To start the ```wh_mon.sh``` as a service, run ```$ sudo systemctl start wh_daemon```, it will trigger ```wh_mon.sh```. To manage daemon, use standart ```systemctl``` options like ```status```, ```stop```, etc.
+To start the ```wh_mon.sh``` as a service (it will trigger ```wh_mon.sh```):
 
-In order for the script to run as a daemon at system startup, use ```$ sudo systemctl enable wh_daemon``` command. To disable - ```$ sudo systemctl disable wh_daemon```
+```
+$ sudo systemctl start wh_daemon
+``` 
 
-## Logging
+To manage daemon, use standart ```systemctl``` options like.
+
+In order for the script to run as a daemon at system startup:
+
+```
+$ sudo systemctl enable wh_daemon
+``` 
+And to disable:
+
+```
+$ sudo systemctl disable wh_daemon
+```
+
+### Logging
 
 If everything was passed successfully, you will see the following output:
 
