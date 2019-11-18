@@ -16,6 +16,10 @@ The project consists of a set of scripts that are interrelated to perform common
 
   The user has the option to choose how to use the script for monitoring: in foreground or like a systemctl daemon.
   
+* **Smart refresh**
+
+  Get the latest logged information without re-running ```wh_get.sh``` bash command - use ```-r``` option to get updates in real time.
+  
 * **Human readable logs**
 
   Much attention was paid to logging information, for ease to understand what happens during the ```wh_mon.sh``` running.
