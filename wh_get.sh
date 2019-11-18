@@ -16,11 +16,10 @@ table_headers=("date" "start" "spent" "end" "break" "overtime" "total")
 from_csv="/var/log/wh_table.csv"
 
 # common default veriables
+is_recursive=false
 is_broken=false
 has_summary=false
 wd_spent_summ=0
-
-# default pretty formatting variables
 is_pretty=false
 max_table_width=$(tput cols)
 max_table_col_width=$(( max_table_width / ${#table_headers[@]} ))
@@ -34,9 +33,11 @@ options:
 	-f	specify absolute CSV file path (default is /var/log/wh_table.csv)
 	-d	date to read (all, by default)
 		Accepted: 'YYYY-MM-DD', 'YYYY-MM-DD:YYYY-MM-DD', today, week, month
-	-p 	pretty formatting of the result, 'true' or 'false' (default is false)
-	-s 	prints 'spent' column summary for given date(s)
-	-h	display script helper
+	-p 	pretty formatting of the result, true/false (default is false)
+	-s 	prints 'spent' column summary, true/false (default is false)
+	-r 	run script in 'refresh' mode, true/false (default is false)
+		Gives an ability to update the results in real time
+	-h	show script helper
 EOF
 
 get_week_dates() {
@@ -44,7 +45,7 @@ get_week_dates() {
 
 	if [ "$(date +%u)" -ne "1" ]; then
 		# it's not Monday
-		# get Monday date
+		#+ so get Monday date
 		d=$(date -dlast-monday +%F)
 
 		# fill the week dates from Monday to current day
@@ -77,8 +78,15 @@ get_month_dates() {
 
 
 # read script options
-while getopts f:d:p:s:h FLAG; do
+while getopts r:f:d:p:s:h: FLAG; do
 	case $FLAG in
+		r)	
+			if [[ $OPTARG =~ (false|true) ]]; then
+				is_recursive=$OPTARG
+				tput sc
+				passed_opts=$(echo "$@")
+			fi
+			;;
 		f)	
 			# check whether the file path has even passed
 			if [ -n "$OPTARG" ]; then from_csv=$OPTARG
@@ -135,8 +143,8 @@ while getopts f:d:p:s:h FLAG; do
 							exit 1;
 						fi
 
-						# fill the dates list, which consist
-						# of the dates within the given range
+						# fill the dates list, which consists
+						#+ of the dates within the given range
 						d="$from_date"
 						until [[ $d > $to_date ]]; do
 							dates+=("$d")
@@ -168,13 +176,12 @@ if [ ! -f $from_csv ]; then
 	exit 1
 else
 	# set complete list of available dates within the given csv file
-	# do not skip header while counting 
 	csv_size=$(cat -n $from_csv | awk 'END { print NR }')
 	csv_dates=($(awk 'BEGIN {FS = ","} FNR > 1 { print $1 }' $from_csv | uniq))
 fi
 
 
-# if -d option is not set, set all dates
+# if -d option is not set, set all the dates
 if [[ ${#dates[@]} -eq 0 ]]; then
 	dates=(${csv_dates[@]})
 fi
@@ -225,12 +232,12 @@ for d in "${dates[@]}"; do
 				if [ $line -eq $count ]; then
 
 					# if it's the last record of the file
-					# and if the date is today
+					#+ and if the date is today
 					if [ $to_line -eq $csv_size ] && \
 						[ "$daystamp" == "$day" ]; then
 
 						# the working day has not ended yet
-    					# remember 'locked' time as timestamp
+    					#+ so remember 'locked' time as timestamp
     					lock_time=$(date -u -d "$timestamp" +"%s")
 
     					# calculate spent time till current moment
@@ -248,10 +255,10 @@ for d in "${dates[@]}"; do
     					wd_break=$(( lock_time - wd_start - wd_spent ))
     				else
     					# the time logging has been broken
-    					# or the next day was started
-    					# then reset to the last 'locked' status
-    					# because of the inability to accurately track
-    					# the end of the working day
+    					#+ or the next day was started
+    					#+ then reset to the last 'locked' status
+    					#+ because of the inability to accurately track
+    					#+ the end of the working day
     					is_broken=true
     					unset unlock_time
 					fi
@@ -285,8 +292,7 @@ for d in "${dates[@]}"; do
 
 		# default overtime
 		wd_over="0"
-		# calculate overtime if spent time
-		# greater then working day durration
+		# calculate overtime if spent time greater then working day durration
 		if [[ $wd_spent -gt $wd_dur ]]; then
 			wd_over=$(( wd_spent - wd_dur ))
 		fi
@@ -319,8 +325,8 @@ done
 
 if [[ ${#results[@]} -ne 0 ]]; then
 	if $is_pretty; then
-		# find the longest string in the table columns
-		# in order to calculate min column width
+		# find the longest string in table columns
+		#+ in order to calculate min column width
 		for (( i = 0; i < ${#table_headers[@]}; i++ )); do
 			longest_len=0
 			header="${table_headers[i]}"
@@ -339,7 +345,6 @@ if [[ ${#results[@]} -ne 0 ]]; then
 		printf "$pretty_format\n" "${table_headers[@]}"
 
 		for row in "${results[@]}"; do
-			# echo "$pretty_format"
 			recs=($row)
 			printf "$pretty_format\n" "${recs[@]}"
 		done
@@ -351,8 +356,26 @@ if [[ ${#results[@]} -ne 0 ]]; then
 		done
 	fi
 
-	# show summary if option set
+	# show summary if appropriate option set
 	if [[ $wd_spent_summ -gt 0 ]] && $has_summary; then
-		echo "total spent: ~$(( wd_spent_summ / 3600 ))h"
+		echo -e "\nTotal spent: ~$(( wd_spent_summ / 3600 ))h"
 	fi
+fi
+
+if $is_recursive && [[ "${#results[@]}" -ne 0 ]]; then
+	echo "Last update: $timestamp"
+	echo "Update again? y/n"
+
+	while true; do
+		read -rsn1
+		if [ "$REPLY" = "y" ]; then
+			tput rc
+			tput ed
+			# replace the current script with a new one
+			#+ to prevent memory leaks
+			exec ./$(basename -- "$0") $passed_opts
+		elif [ "$REPLY" = "n" ]; then
+			exit
+		fi
+	done
 fi
