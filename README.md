@@ -52,7 +52,7 @@ What are the requirements for your system that you should consider to continue:
 
 1. ```git clone https://github.com/n3gbx/working-hours-monitor```
 2. In Terminal, navigate to ```working-hours-monitor``` folder
-3. Run ```sudo -E wh_install.sh``` command to start compatibility tests and copy script files to desired directories
+3. Run ```sudo -E bash wh_install.sh``` command to start compatibility tests and copy script files to desired directories
 
 OR
 
