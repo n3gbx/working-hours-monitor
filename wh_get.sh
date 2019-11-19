@@ -358,7 +358,9 @@ if [[ ${#results[@]} -ne 0 ]]; then
 
 	# show summary if appropriate option set
 	if [[ $wd_spent_summ -gt 0 ]] && $has_summary; then
-		echo -e "\nTotal spent: ~$(( wd_spent_summ / 3600 ))h"
+		total_hours=$(( wd_spent_summ / 3600 ))
+		total_minutes=$(( wd_spent_summ / 60 % 60 ))
+		printf "\n%s%dh%02dm\n" "Total spent: ~" $total_hours $total_minutes
 	fi
 fi
 
