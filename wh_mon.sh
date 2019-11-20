@@ -20,7 +20,7 @@ readonly msg_finished="finished"
 readonly msg_locked="locked"
 readonly msg_unlocked="unlocked"
 is_dbus_started=false
-is_root=false
+is_under_root=false
 user=$USER
 color_log=${COLOR_LOG:-true}
 simple_log=${SIMPLE_LOG:-false}
@@ -28,6 +28,18 @@ simple_log=${SIMPLE_LOG:-false}
 # get dbus-monitor pid
 get_dbus_pid() { echo $(pgrep "dbus-monitor"); }
 
+
+# check owner of the file or folder
+is_right_owner() {
+	owner=$(ls -ld $1 | awk '{print $3}')
+
+	if ! $is_under_root && [ "$owner" != "$user" ]; then
+		log e "$me $1 has '$owner' user as owner, current is '$user'"
+		return 1
+	fi
+
+	return 0
+}
 
 # write csv row into the file
 write() { 
@@ -42,8 +54,16 @@ write() {
 
 
 write_header() {
-	if $is_root; then sh -c "echo $header >> $file_path"
-	else echo $header >> $file_path; fi
+	log i "$me writing a header to $file_path"
+	if $is_under_root; then sh -c "echo $header >> $file_path"
+	else 
+		if is_right_owner $file_dest; then
+			echo $header >> $file_path
+		else
+			log e "$me error while writing a header"
+			exit 1
+		fi
+	fi
 }
 
 
@@ -93,9 +113,10 @@ trap "log w '$me was terminated'; exit" SIGTERM
 trap "on_trap; log w '$me exit'; exit" EXIT
 
 
-# if run under root, override user variable to point on the current logged user
+# if run under root, override 'user' variable
+#+ to point to the current logged user
 if [ $EUID -eq 0 ]; then
-	is_root=true
+	is_under_root=true
 	if [ -z $SUDO_USER ]; then
 		user=$(who | cut -d' ' -f1)
 	else
@@ -111,25 +132,20 @@ if [ $EUID -eq 0 ]; then
 fi
 
 
-# verify folder for .csv file
-if [ -d $file_dest ]; then
+# verify .csv file
+if [ -f $file_path ]; then
 
-	# verify .csv file
-	if [ -f $file_path ]; then
-
-		owner=$(ls -ld $file_path | awk '{print $3}')
-
-		# if folder owner is root
-		if ! $is_root && [ "$owner" != "$user" ]; then
-			log e "$me $file_path has '$owner' user as owner, current is '$user'"
-			exit 1
-		fi
-		
+	if is_right_owner $file_path; then
 		file_header=$(head -n 1 "$file_path")
 
 		if [[ "$file_header" != "$header" ]]; then
-			log w "$me $file_path header is invalid"
-			log v "$file_header"
+			if [[ -n "$file_header" ]]; then
+				log w "$me $file_path header is invalid"
+				log v "$file_header"
+			else
+				log w "$me $file_path header is empty"
+			fi
+			
 			log i "$me replacing $file_path header with valid one"
 
 			if [ -s "$file_path" ]; then
@@ -138,20 +154,16 @@ if [ -d $file_dest ]; then
 				write_header
 			fi
 		else
-			log i "$me $file_path exists and it's valid"
+			log i "$me $file_path exists and is of valid format"
 		fi
 	else
-		log w "$me $file_path doesn't exist"
-		log i "$me creating ${file_name} file"
-
-		write_header
+		exit 1
 	fi
 else
-	log w "$me there is not such folder: '$file_dest'"
-	log i "$me needed entities: '$file_path'"
+	log w "$me file is missing along the path: '$file_path'"
+	log i "$me creating a folder if isn't exist: '$file_path'"
 
 	run "mkdir -p $file_dest"
-
 	write_header
 fi
 
@@ -191,7 +203,7 @@ fi
 # start dbus-monitor proccess
 log i "$me starting new dbus-monitor process"
 
-if $is_root; then
+if $is_under_root; then
 	coproc su -c 'dbus-monitor --session "type=signal,interface=org.gnome.ScreenSaver"' $user
 	wait_dbus pgrep -P $COPROC_PID
 else

@@ -58,7 +58,7 @@ run() {
  	rt=$(( (et - st) / 1000000 ))
  	log v "$*" $rt
  	
- 	if [[ $ec -ne 0 || -n $err ]]; then log e "$err"; return 1; fi
+ 	if [[ $ec -ne 0 || -n $err ]]; then log e "$err"; exit 1; fi
 
  	return 0
 }
