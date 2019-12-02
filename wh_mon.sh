@@ -30,7 +30,7 @@ get_dbus_pid() { echo $(pgrep "dbus-monitor"); }
 
 
 # check owner of the file or folder
-is_right_owner() {
+is_writable() {
 	owner=$(ls -ld $1 | awk '{print $3}')
 
 	if ! $is_under_root && [ "$owner" != "$user" ]; then
@@ -51,21 +51,6 @@ write() {
 		exit 1
 	fi
 }
-
-
-write_header() {
-	log i "$me writing a header to $file_path"
-	if $is_under_root; then sh -c "echo $header >> $file_path"
-	else 
-		if is_right_owner $file_dest; then
-			echo $header >> $file_path
-		else
-			log e "$me error while writing a header"
-			exit 1
-		fi
-	fi
-}
-
 
 # wait process to start
 wait_dbus() {
@@ -134,37 +119,40 @@ fi
 
 # verify .csv file
 if [ -f $file_path ]; then
-
-	if is_right_owner $file_path; then
+	if is_writable $file_path; then
 		file_header=$(head -n 1 "$file_path")
 
 		if [[ "$file_header" != "$header" ]]; then
-			if [[ -n "$file_header" ]]; then
-				log w "$me $file_path header is invalid"
-				log v "$file_header"
-			else
-				log w "$me $file_path header is empty"
-			fi
-			
-			log i "$me replacing $file_path header with valid one"
+			log w "$me $file_path header is invalid"
+			if [[ -n "$file_header" ]]; then log v "$file_header"; fi
+
+			log i "$me replacing $file_path header with the valid one"
 
 			if [ -s "$file_path" ]; then
-				run sed -i "1s/.*/${header}/" $file_path
+				run "sed -i '1s/.*/${header}/' $file_path"
 			else
-				write_header
+				run "echo $header >> $file_path"
 			fi
 		else
-			log i "$me $file_path exists and is of valid format"
+			log i "$me $file_path exists and it's header is valid"
 		fi
 	else
 		exit 1
 	fi
 else
-	log w "$me file is missing along the path: '$file_path'"
-	log i "$me creating a folder if isn't exist: '$file_path'"
+	log w "$me file is missing along the path: $file_path"
 
-	run "mkdir -p $file_dest"
-	write_header
+	if is_writable $file_dest; then
+		if ! [ -d $file_dest ]; then
+			log i "$me creating a folder: $file_path"
+			run "mkdir -p $file_dest"
+		fi
+		log i "$me writing a header to $file_path"
+		run "echo $header >> $file_path"
+	else
+		log e "$me error while writing a header"
+		exit 1
+	fi
 fi
 
 
@@ -197,7 +185,6 @@ if [[ -n $(get_dbus_pid) ]]; then
 
 	log i "$me old dbus-monitor process is no longer exist"
 fi
-
 
 
 # start dbus-monitor proccess

@@ -50,13 +50,13 @@ log() {
 run() {
 	st=$(date +%s%N)
 
-	if [[ -z $* ]]; then log e "run(): command is not specified"; fi
- 	local err=$($* 2>&1 > /dev/null)
+	if [[ -z $@ ]]; then log e "run(): command is not specified"; fi
+ 	local err=$(eval $@ 2>&1 > /dev/null)
  	ec=$?
 
  	et=$(date +%s%N)
  	rt=$(( (et - st) / 1000000 ))
- 	log v "$*" $rt
+ 	log v "$@" $rt
  	
  	if [[ $ec -ne 0 || -n $err ]]; then log e "$err"; exit 1; fi
 
