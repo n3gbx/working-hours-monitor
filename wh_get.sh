@@ -83,7 +83,8 @@ while getopts r:f:d:p:s:h: FLAG; do
 		r)	
 			if [[ $OPTARG =~ (false|true) ]]; then
 				is_recursive=$OPTARG
-				tput sc
+				tput smcup; tput sc
+				tput clear; tput home
 				passed_opts=$(echo "$@")
 			fi
 			;;
@@ -360,23 +361,23 @@ if [[ ${#results[@]} -ne 0 ]]; then
 	if [[ $wd_spent_summ -gt 0 ]] && $has_summary; then
 		total_hours=$(( wd_spent_summ / 3600 ))
 		total_minutes=$(( wd_spent_summ / 60 % 60 ))
-		printf "\n%s%dh%02dm\n" "Total spent: ~" $total_hours $total_minutes
+		printf "\ndays (total): ${#results[@]}"
+		printf "\n%s%dh%02dm\n" "hours (spent): ~" $total_hours $total_minutes
 	fi
 fi
 
 if $is_recursive && [[ "${#results[@]}" -ne 0 ]]; then
-	echo "Last update: $timestamp"
-	echo "Update again? y/n"
+	echo -e "\nupdate again? y/n (last at $timestamp)"
 
 	while true; do
 		read -rsn1
 		if [ "$REPLY" = "y" ]; then
-			tput rc
-			tput ed
+			tput clear; tput home
 			# replace the current script with a new one
 			#+ to prevent memory leaks
 			exec ./$(basename -- "$0") $passed_opts
 		elif [ "$REPLY" = "n" ]; then
+			tput rmcup; tput rc
 			exit
 		fi
 	done
