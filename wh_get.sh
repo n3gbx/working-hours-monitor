@@ -359,15 +359,21 @@ if [[ ${#results[@]} -ne 0 ]]; then
 
 	# show summary if appropriate option set
 	if [[ $wd_spent_summ -gt 0 ]] && $has_summary; then
+		normal_hours=$(( (${#results[@]} * wd_dur) / 3600 ))
+		normal_minutes="0"
 		total_hours=$(( wd_spent_summ / 3600 ))
 		total_minutes=$(( wd_spent_summ / 60 % 60 ))
-		printf "\ndays (total): ${#results[@]}"
-		printf "\n%s%dh%02dm\n" "hours (spent): ~" $total_hours $total_minutes
+
+		printf "\n%-20s%d" "days (spent):" ${#results[@]}
+		printf "\n%-20s%s" "period (from/to):" "${dates[0]}/${dates[-1]}"
+		printf "\n%-20s%dh%02dm" "hours (spent):" $total_hours $total_minutes
+		printf "%s%dh%dm" "/" $normal_hours $normal_minutes
+		printf "\n%-20s%s\n" "last pull:" "$timestamp"
 	fi
 fi
 
 if $is_recursive && [[ "${#results[@]}" -ne 0 ]]; then
-	echo -e "\nupdate again? y/n (last at $timestamp)"
+	printf "\nUpdate again? y/n"
 
 	while true; do
 		read -rsn1
